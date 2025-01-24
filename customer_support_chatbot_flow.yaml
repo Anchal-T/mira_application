@@ -1,0 +1,91 @@
+version: "0.1.0"
+
+metadata:
+  flow_type: "compound"
+  name: "customer-support-chatbot-flow"  # Updated name to use lowercase alphanumerics and hyphens
+  description: "Automates customer support query handling and response generation."
+  author: "anchal"
+  tags: [customer-support, chatbot, automation]
+  private: true
+
+inputs:
+  customer_query:
+    type: string
+    description: "Customer's input query or issue"
+    required: true
+    example: "How can I reset my password?"
+  customer_id:
+    type: string
+    description: "Unique customer identifier"
+    required: true
+    example: "CUST12345"
+
+workflow:
+  query_analysis:
+    type: "elemental"
+    flow_name: "your-username/query_analysis_flow"
+    inputs:
+      query_text: ${inputs.customer_query}
+
+  sentiment_analysis:
+    type: "custom"
+    inputs:
+      query: ${inputs.customer_query}
+    model:
+      provider: "anthropic"
+      name: "claude-3.5-sonnet"
+    prompt: |
+      Analyze the sentiment of this customer query: "{query}"
+      Classify as: Positive, Neutral, Negative.
+  
+  response_generation:
+    type: "custom"
+    depends_on: [query_analysis, sentiment_analysis]
+    inputs:
+      analyzed_query: ${query_analysis.output}
+      sentiment: ${sentiment_analysis.output}
+      customer_id: ${inputs.customer_id}
+    model:
+      provider: "anthropic"
+      name: "claude-3.5-sonnet"
+    prompt: |
+      Customer query: {analyzed_query}
+      Sentiment: {sentiment}
+      Customer ID: {customer_id}
+      
+      Generate a response addressing the customer's concern, ensuring empathy in tone if sentiment is negative.
+
+  follow_up_recommendation:
+    type: "custom"
+    depends_on: [response_generation]
+    inputs:
+      response: ${response_generation.output}
+    model:
+      provider: "anthropic"
+      name: "claude-3.5-sonnet"
+    dataset:
+      source: "your-username/support_history_dataset"
+    prompt: |
+      Based on the response: "{response}", recommend follow-up actions or related articles to assist the customer further.
+
+output:
+  value:
+    - "Query Analysis: ${query_analysis.output}"
+    - "Sentiment: ${sentiment_analysis.output}"
+    - "Response: ${response_generation.output}"
+    - "Follow-Up Recommendation: ${follow_up_recommendation.output}"
+
+readme: |
+  ### Customer Support Chatbot Flow
+
+  This flow processes customer queries and generates an empathetic and effective response. Here's how it works:
+  1. **Query Analysis**: Analyzes the customer's query for key topics.
+  2. **Sentiment Analysis**: Determines the emotional tone of the query.
+  3. **Response Generation**: Creates a detailed and empathetic response.
+  4. **Follow-Up Recommendation**: Suggests actions or resources based on the response.
+
+  ### Outputs:
+  - Query Analysis
+  - Sentiment
+  - Generated Response
+  - Follow-Up Recommendation
