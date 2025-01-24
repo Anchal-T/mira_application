@@ -23,7 +23,7 @@ inputs:
 workflow:
   query_analysis:
     type: "elemental"
-    flow_name: "your-username/query_analysis_flow"
+    flow_name: "anchal/query_analysis_flow"
     inputs:
       query_text: ${inputs.customer_query}
 
@@ -64,7 +64,7 @@ workflow:
       provider: "anthropic"
       name: "claude-3.5-sonnet"
     dataset:
-      source: "your-username/support_history_dataset"
+      source: "anchal/support_history_dataset"
     prompt: |
       Based on the response: "{response}", recommend follow-up actions or related articles to assist the customer further.
 
